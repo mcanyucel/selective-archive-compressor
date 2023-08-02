@@ -48,5 +48,7 @@
             </mah:TextBoxHelper.ButtonContent>
         </TextBox>
 
+        <Button Grid.Row="2" Grid.Column="1" Margin="4" Content="Analyze" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
+
     </Grid>
 </mah:MetroWindow>

@@ -82,6 +82,7 @@ namespace selective_archive_compressor.viewmodel
         }
 
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
+        public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
 
 
 
@@ -96,9 +97,10 @@ namespace selective_archive_compressor.viewmodel
             m_WindowService = windowService;
 
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
+            m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand };
+            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_AnalyzeCommand };
         }
 
         private bool BrowseRootDirectoryCanExecute()
@@ -117,9 +119,13 @@ namespace selective_archive_compressor.viewmodel
             return !m_IsAnalyzing && !m_IsCompressing && !string.IsNullOrWhiteSpace(m_RootDirectoryPath);
         }
 
-        private Task Analyze()
+        private async Task Analyze()
         {
-            throw new NotImplementedException();
+            IsAnalyzing = true;
+
+            await Task.Delay(2000);
+
+            IsAnalyzing = false;
         }
 
 
@@ -161,6 +167,7 @@ namespace selective_archive_compressor.viewmodel
         readonly ObservableCollection<FileItem> m_FileItems = new();
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
+        readonly IAsyncRelayCommand m_AnalyzeCommand;
 
         readonly List<IRelayCommand> m_RelayCommands;
         readonly List<IAsyncRelayCommand> m_AsyncRelayCommands;
