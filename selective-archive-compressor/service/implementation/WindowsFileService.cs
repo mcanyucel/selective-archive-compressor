@@ -9,7 +9,7 @@ namespace selective_archive_compressor.service.implementation
 {
     internal class WindowsFileService : IFileService
     {
-        public async Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath, ref ConcurrentBag<FileItem> fileItems)
+        public Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath)
         {
             if (string.IsNullOrEmpty(rootDirectoryPath))
                 throw new ArgumentNullException(nameof(rootDirectoryPath));
@@ -18,10 +18,10 @@ namespace selective_archive_compressor.service.implementation
                 throw new DirectoryNotFoundException(rootDirectoryPath);
 
 
-
+            throw new NotImplementedException();
                                    
         }
 
-        private async Task<>
+        
     }
 }

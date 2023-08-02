@@ -7,6 +7,6 @@ namespace selective_archive_compressor.service
 {
     internal interface IFileService
     {
-        Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath, ref ConcurrentBag<FileItem> fileItems);
+        Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath);
     }
 }

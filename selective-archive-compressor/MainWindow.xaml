@@ -15,8 +15,8 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -42,7 +42,7 @@
         <ProgressBar Grid.Row="14" Grid.Column="2" Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <TextBlock Grid.Row="0" Grid.Column="1" Margin="4" Text="Root Folder" />
-        <TextBox Grid.Row="0" Grid.Column="2" Margin="4" Width="200" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
+        <TextBox Grid.Row="1" Grid.Column="1" Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
             <mah:TextBoxHelper.ButtonContent>
                 <iconPacks:PackIconMaterial Kind="Folder" />
             </mah:TextBoxHelper.ButtonContent>

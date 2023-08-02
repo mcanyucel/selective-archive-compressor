@@ -26,6 +26,7 @@ namespace selective_archive_compressor
             var services = new ServiceCollection();
             services.AddSingleton<IFileService, WindowsFileService>();
             services.AddSingleton<ILogService, LogService>();
+            services.AddSingleton<IWindowService, WindowService>();
             services.AddTransient<MainViewModel>();
             return services.BuildServiceProvider();
         }

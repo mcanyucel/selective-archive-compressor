@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using selective_archive_compressor.model;
 using selective_archive_compressor.service;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -90,15 +89,27 @@ namespace selective_archive_compressor.viewmodel
 
 
 
-        public MainViewModel(IFileService fileService, ILogService logService)
+        public MainViewModel(IFileService fileService, ILogService logService, IWindowService windowService)
         {
             m_FileService = fileService;
             m_LogService = logService;
+            m_WindowService = windowService;
 
-            m_BrowseRootDirectoryCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
+            m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
             m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand };
+        }
+
+        private bool BrowseRootDirectoryCanExecute()
+        {
+            return !m_IsAnalyzing && !m_IsCompressing;
+        }
+
+        private async Task BrowseRootDirectory()
+        {
+            var result = await m_WindowService.ShowFolderPickerAsync(m_RootDirectoryPath);
+            if (result != null) RootDirectoryPath = result;
         }
 
         private bool AnalyzeCanExecute()
@@ -142,10 +153,10 @@ namespace selective_archive_compressor.viewmodel
         long m_TotalSize; // MB
         CompressionType m_CompressionType = CompressionType.SevenZip;
         int m_CompressionLevel = 9;
-        ConcurrentBag<FileItem> m_FileBag = new(); // fill the items to the bag concurrently, then add them to the observable collection
 
         readonly IFileService m_FileService;
         readonly ILogService m_LogService;
+        readonly IWindowService m_WindowService;
 
         readonly ObservableCollection<FileItem> m_FileItems = new();
 
