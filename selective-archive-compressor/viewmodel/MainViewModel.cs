@@ -81,6 +81,12 @@ namespace selective_archive_compressor.viewmodel
             private set => SetProperty(ref m_ProcessedItemCount, value);
         }
 
+        public DirectoryNode? DirectoryTree
+        {
+            get => m_DirectoryTree;
+            private set => SetProperty(ref m_DirectoryTree, value);
+        }
+
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
         public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
 
@@ -123,7 +129,7 @@ namespace selective_archive_compressor.viewmodel
         {
             IsAnalyzing = true;
 
-            await m_FileService.GetFilesAsync(m_RootDirectoryPath);
+            DirectoryTree = await m_FileService.CreateDirectoryTreeAsync(m_RootDirectoryPath);
 
             IsAnalyzing = false;
         }
@@ -165,6 +171,7 @@ namespace selective_archive_compressor.viewmodel
         readonly IWindowService m_WindowService;
 
         readonly ObservableCollection<FileItem> m_FileItems = new();
+        DirectoryNode? m_DirectoryTree;
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
         readonly IAsyncRelayCommand m_AnalyzeCommand;

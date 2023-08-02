@@ -50,6 +50,41 @@ namespace selective_archive_compressor.service.implementation
             await Task.WhenAll(tasks);
         }
 
-        
+        public async Task<DirectoryNode> CreateDirectoryTreeAsync(string rootDirectoryPath)
+        {
+            DirectoryInfo directoryInfo = new(rootDirectoryPath);
+            DirectoryNode node = new(directoryInfo.Name);
+
+            List<Task<DirectoryNode>> tasks = new();
+
+            DirectoryInfo[] subDirectories = directoryInfo.GetDirectories();
+            foreach (var subDirectory in subDirectories)
+            {
+                tasks.Add(Task.Run(() => CreateDirectoryTreeAsync(subDirectory.FullName)));
+            }
+
+            await Task.WhenAll(tasks);
+
+            foreach (var task in tasks)
+            {
+                node.Children.Add(await task);
+            }
+
+            PrintDirectoryTree(node);
+
+
+            return node;
+
+        }
+
+        void PrintDirectoryTree(DirectoryNode node, int level = 0)
+        {
+            string indent = new(' ', level * 2);
+            System.Diagnostics.Debug.WriteLine($"{indent}{node.Name}");
+            foreach (var child in node.Children)
+            {
+                PrintDirectoryTree(child, level + 1);
+            }
+        }
     }
 }
