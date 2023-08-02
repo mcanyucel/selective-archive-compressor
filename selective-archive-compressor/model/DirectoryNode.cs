@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -26,22 +25,10 @@ namespace selective_archive_compressor.model
             set => SetProperty(ref m_IsExpanded, value);
         }
 
-        public bool IsCompressed
-        {
-            get => m_IsCompressed;
-            set => SetProperty(ref m_IsCompressed, value);
-        }
-
-        public bool IsCompressing
-        {
-            get => m_IsCompressing;
-            set => SetProperty(ref m_IsCompressing, value);
-        }
-
         public bool IsSelectedForCompression
         {
             get => m_IsSelectedForCompression;
-            set => SetProperty(ref m_IsSelectedForCompression, value);
+            private set => SetProperty(ref m_IsSelectedForCompression, value);
         }
 
         public long Size
@@ -74,6 +61,15 @@ namespace selective_archive_compressor.model
             });
         }
 
+        public void MarkSelectedForCompression(bool isSelectedForCompression)
+        {
+            IsSelectedForCompression = isSelectedForCompression;
+            // we do not want to compress the subdirectories if the parent directory is compressed
+            foreach (var child in Children)
+                child.MarkSelectedForCompression(false);
+            // this does not prevent selecting parent first and then child. but it is not a problem.
+        }
+
         /// <summary>
         /// Calculates the total size of the files in the directory. It does not include the subdirectories.
         /// </summary>
@@ -90,8 +86,6 @@ namespace selective_archive_compressor.model
         string m_Name = string.Empty;
         bool m_IsSelected = false;
         bool m_IsExpanded = false;
-        bool m_IsCompressed = false;
-        bool m_IsCompressing = false;
         bool m_IsSelectedForCompression = false;
         long m_Size = 0;
         ObservableCollection<DirectoryNode> m_Children = new();

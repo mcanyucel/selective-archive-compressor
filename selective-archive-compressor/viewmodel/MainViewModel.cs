@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using selective_archive_compressor.model;
 using selective_archive_compressor.service;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -84,7 +85,8 @@ namespace selective_archive_compressor.viewmodel
 
 
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
-        public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
+        public IAsyncRelayCommand ScanCommand => m_ScanCommand;
+        public IRelayCommand<DirectoryNode> ToggleCompressionCommand => m_ToggleCompressionCommand;
 
 
 
@@ -100,11 +102,19 @@ namespace selective_archive_compressor.viewmodel
 
             m_DirectoryTree = new ObservableCollection<DirectoryNode>();
 
+            m_ToggleCompressionCommand = new RelayCommand<DirectoryNode>(ToggleCompression);
+
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
-            m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
+            m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_AnalyzeCommand };
+            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand };
+        }
+
+        private void ToggleCompression(DirectoryNode? node)
+        {
+            node?.MarkSelectedForCompression(!node.IsSelectedForCompression);
+                
         }
 
         private bool BrowseRootDirectoryCanExecute()
@@ -118,12 +128,12 @@ namespace selective_archive_compressor.viewmodel
             if (result != null) RootDirectoryPath = result;
         }
 
-        private bool AnalyzeCanExecute()
+        private bool ScanCanExecute()
         {
             return !m_IsAnalyzing && !m_IsCompressing && !string.IsNullOrWhiteSpace(m_RootDirectoryPath);
         }
 
-        private async Task Analyze()
+        private async Task Scan()
         {
             IsAnalyzing = true;
             DirectoryTree.Clear();
@@ -182,7 +192,9 @@ namespace selective_archive_compressor.viewmodel
         readonly ObservableCollection<DirectoryNode> m_DirectoryTree;
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
-        readonly IAsyncRelayCommand m_AnalyzeCommand;
+        readonly IAsyncRelayCommand m_ScanCommand;
+
+        readonly IRelayCommand<DirectoryNode> m_ToggleCompressionCommand;
 
         readonly List<IRelayCommand> m_RelayCommands;
         readonly List<IAsyncRelayCommand> m_AsyncRelayCommands;

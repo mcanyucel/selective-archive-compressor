@@ -7,54 +7,52 @@
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:converters="clr-namespace:selective_archive_compressor.converter"
                  xmlns:viewmodel="clr-namespace:selective_archive_compressor.viewmodel"
+                 xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
                  d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
                  mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:ExpandedToIconConverter x:Key="ExpandedToIconConverter" />
     </Window.Resources>
     <UniformGrid Columns="2" Rows="1">
         <Grid Grid.Column="0">
             <TreeView Margin="4" ItemsSource="{Binding DirectoryTree}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
-                        <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal">
-                            <iconPacks:PackIconMaterial Kind="Folder" />
-                            <TextBlock Text="{Binding Name}" Margin="4,0,0,0" />
-                        </StackPanel>
+                        <DockPanel LastChildFill="True">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="MouseRightButtonDown">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.ToggleCompressionCommand, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" CommandParameter="{Binding}" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                            <iconPacks:PackIconMaterial DockPanel.Dock="Left" Kind="{Binding IsExpanded, Converter={StaticResource ExpandedToIconConverter}}" />
+
+                            <iconPacks:PackIconMaterial DockPanel.Dock="Right" Margin="0,0,4,0" Kind="FolderZipOutline" Foreground="Red" Visibility="{Binding IsSelectedForCompression, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                            <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" Margin="4,0,0,0" />
+                        </DockPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
             <mah:ProgressRing VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Accent2}" IsActive="{Binding IsAnalyzing}" />
         </Grid>
-
-
-
-
-
         <StackPanel Grid.Column="1" Orientation="Vertical">
-
-
-
-
-
             <TextBlock Margin="4" Text="Root Folder" />
             <TextBox Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
                 <mah:TextBoxHelper.ButtonContent>
                     <iconPacks:PackIconMaterial Kind="Folder" />
                 </mah:TextBoxHelper.ButtonContent>
             </TextBox>
-
-            <Button Margin="4" Content="Analyze" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
-
+            <Button Margin="4" Content="Scan" Command="{Binding ScanCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
             <ProgressBar Grid.Row="14"  Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </StackPanel>
-
     </UniformGrid>
 
 </mah:MetroWindow>
