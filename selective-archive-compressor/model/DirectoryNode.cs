@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.model
@@ -49,7 +50,7 @@ namespace selective_archive_compressor.model
             private set => SetProperty(ref m_Size, value);
         }
 
-        public List<DirectoryNode> Children
+        public ObservableCollection<DirectoryNode> Children
         {
             get => m_Children;
             private set => SetProperty(ref m_Children, value);
@@ -93,7 +94,7 @@ namespace selective_archive_compressor.model
         bool m_IsCompressing = false;
         bool m_IsSelectedForCompression = false;
         long m_Size = 0;
-        List<DirectoryNode> m_Children = new();
+        ObservableCollection<DirectoryNode> m_Children = new();
         #endregion
     }
 }

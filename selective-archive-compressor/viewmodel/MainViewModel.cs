@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using selective_archive_compressor.model;
 using selective_archive_compressor.service;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -81,11 +80,8 @@ namespace selective_archive_compressor.viewmodel
             private set => SetProperty(ref m_ProcessedItemCount, value);
         }
 
-        public DirectoryNode? DirectoryTree
-        {
-            get => m_DirectoryTree;
-            private set => SetProperty(ref m_DirectoryTree, value);
-        }
+        public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
+
 
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
         public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
@@ -101,6 +97,8 @@ namespace selective_archive_compressor.viewmodel
             m_FileService = fileService;
             m_LogService = logService;
             m_WindowService = windowService;
+
+            m_DirectoryTree = new ObservableCollection<DirectoryNode>();
 
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
             m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
@@ -128,10 +126,20 @@ namespace selective_archive_compressor.viewmodel
         private async Task Analyze()
         {
             IsAnalyzing = true;
-
-            DirectoryTree = await m_FileService.CreateDirectoryTreeAsync(m_RootDirectoryPath);
+            DirectoryTree.Clear();
+            DirectoryTree.Add(await m_FileService.CreateDirectoryTreeAsync(m_RootDirectoryPath));
 
             IsAnalyzing = false;
+        }
+
+        private static void PrintDirectoryTree(DirectoryNode node, int level = 0)
+        {
+            string indent = new(' ', level * 2);
+            System.Diagnostics.Debug.WriteLine($"{indent}{node.Name}");
+            foreach (var child in node.Children)
+            {
+                PrintDirectoryTree(child, level + 1);
+            }
         }
 
 
@@ -171,7 +179,7 @@ namespace selective_archive_compressor.viewmodel
         readonly IWindowService m_WindowService;
 
         readonly ObservableCollection<FileItem> m_FileItems = new();
-        DirectoryNode? m_DirectoryTree;
+        readonly ObservableCollection<DirectoryNode> m_DirectoryTree;
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
         readonly IAsyncRelayCommand m_AnalyzeCommand;

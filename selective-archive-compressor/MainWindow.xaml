@@ -13,42 +13,48 @@
     <Window.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <!--10-->
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
+    <UniformGrid Columns="2" Rows="1">
+        <Grid Grid.Column="0">
+            <TreeView Margin="4" ItemsSource="{Binding DirectoryTree}">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="Folder" />
+                            <TextBlock Text="{Binding Name}" Margin="4,0,0,0" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            <mah:ProgressRing VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Accent2}" IsActive="{Binding IsAnalyzing}" />
+        </Grid>
 
-        <mah:ProgressRing Grid.Row="0" Grid.RowSpan="15" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Accent2}" IsActive="{Binding IsAnalyzing}" />
 
-        <ProgressBar Grid.Row="14" Grid.Column="2" Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-        <TextBlock Grid.Row="0" Grid.Column="1" Margin="4" Text="Root Folder" />
-        <TextBox Grid.Row="1" Grid.Column="1" Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
-            <mah:TextBoxHelper.ButtonContent>
-                <iconPacks:PackIconMaterial Kind="Folder" />
-            </mah:TextBoxHelper.ButtonContent>
-        </TextBox>
 
-        <Button Grid.Row="2" Grid.Column="1" Margin="4" Content="Analyze" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
 
-    </Grid>
+        <StackPanel Grid.Column="1" Orientation="Vertical">
+
+
+
+
+
+            <TextBlock Margin="4" Text="Root Folder" />
+            <TextBox Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
+                <mah:TextBoxHelper.ButtonContent>
+                    <iconPacks:PackIconMaterial Kind="Folder" />
+                </mah:TextBoxHelper.ButtonContent>
+            </TextBox>
+
+            <Button Margin="4" Content="Analyze" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
+
+            <ProgressBar Grid.Row="14"  Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </StackPanel>
+
+    </UniformGrid>
+
 </mah:MetroWindow>

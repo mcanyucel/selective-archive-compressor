@@ -69,22 +69,7 @@ namespace selective_archive_compressor.service.implementation
             {
                 node.Children.Add(await task);
             }
-
-            PrintDirectoryTree(node);
-
-
             return node;
-
-        }
-
-        void PrintDirectoryTree(DirectoryNode node, int level = 0)
-        {
-            string indent = new(' ', level * 2);
-            System.Diagnostics.Debug.WriteLine($"{indent}{node.Name}");
-            foreach (var child in node.Children)
-            {
-                PrintDirectoryTree(child, level + 1);
-            }
         }
     }
 }
