@@ -9,7 +9,7 @@ namespace selective_archive_compressor.service.implementation
 {
     internal class WindowsFileService : IFileService
     {
-        public Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath)
+        public async Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath)
         {
             if (string.IsNullOrEmpty(rootDirectoryPath))
                 throw new ArgumentNullException(nameof(rootDirectoryPath));
@@ -18,8 +18,36 @@ namespace selective_archive_compressor.service.implementation
                 throw new DirectoryNotFoundException(rootDirectoryPath);
 
 
-            throw new NotImplementedException();
-                                   
+            ConcurrentDictionary<string, DirectoryInfo> directories = new();
+            await TraverseDirectoriesAsync(rootDirectoryPath, directories);
+
+            foreach(var directory in directories)
+            {
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"{directory.Key} - {directory.Value.FullName}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                }
+            }
+
+            return new List<FileItem>();
+        }
+
+        static async Task TraverseDirectoriesAsync(string folderPath, ConcurrentDictionary<string, DirectoryInfo> result)
+        {
+            DirectoryInfo dirInfo = new(folderPath);
+            result.TryAdd(dirInfo.FullName, dirInfo);
+
+            DirectoryInfo[] subDirectories = dirInfo.GetDirectories();
+            var tasks = new List<Task>();
+            foreach (var subDirectory in subDirectories)
+            {
+                tasks.Add(Task.Run(() => TraverseDirectoriesAsync(subDirectory.FullName, result)));
+            }
+            await Task.WhenAll(tasks);
         }
 
         

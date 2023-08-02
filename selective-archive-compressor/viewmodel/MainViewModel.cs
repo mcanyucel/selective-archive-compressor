@@ -123,7 +123,7 @@ namespace selective_archive_compressor.viewmodel
         {
             IsAnalyzing = true;
 
-            await Task.Delay(2000);
+            await m_FileService.GetFilesAsync(m_RootDirectoryPath);
 
             IsAnalyzing = false;
         }
