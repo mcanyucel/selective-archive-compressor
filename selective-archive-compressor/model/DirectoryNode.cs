@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,6 +14,12 @@ namespace selective_archive_compressor.model
         {
             get => m_Name;
             private set => SetProperty(ref m_Name, value);
+        }
+
+        public string FullPath
+        {
+            get => m_FullPath;
+            private set => SetProperty(ref m_FullPath, value);
         }
 
         public bool IsSelected
@@ -32,11 +40,13 @@ namespace selective_archive_compressor.model
             private set => SetProperty(ref m_IsSelectedForCompression, value);
         }
 
-        public long Size
+        public DirectoryData? DirectoryData
         {
-            get => m_Size;
-            private set => SetProperty(ref m_Size, value);
+            get => m_DirectoryData;
+            private set => SetProperty(ref m_DirectoryData, value);
         }
+
+
 
         public ObservableCollection<DirectoryNode> Children
         {
@@ -45,9 +55,10 @@ namespace selective_archive_compressor.model
         }
         #endregion
 
-        public DirectoryNode(string name)
+        public DirectoryNode(string name, string fullPath)
         {
             Name = name;
+            FullPath = fullPath;
         }
 
         #region Methods
@@ -65,25 +76,40 @@ namespace selective_archive_compressor.model
         /// Calculates the total size of the files in the directory. It does not include the subdirectories.
         /// </summary>
         /// <returns></returns>
-        public async Task<long> CalculateDirectorySizeAsync()
+        public async Task<DirectoryData> CalculateDirectorySizeAsync()
         {
-            long size = 0;
+            if (DirectoryData?.Size > 0)
+                return DirectoryData;
+
+
+            DirectoryData directoryData = new();
+
             // current directory
-            DirectoryInfo directoryInfo = new(Name);
+            DirectoryInfo directoryInfo = new(FullPath);
             FileInfo[] files = directoryInfo.GetFiles();
             foreach (var file in files)
-                size += file.Length;
+                directoryData.Size += file.Length;
+
+            directoryData.FileCount += files.Length;
+
             //children
             DirectoryInfo[] directories = directoryInfo.GetDirectories();
-            var tasks = new Task<long>[directories.Length];
-            for (int i = 0; i < directories.Length; i++)
-                tasks[i] = Task.Run(() => new DirectoryNode(directories[i].FullName).CalculateDirectorySizeAsync());
+            directoryData.DirectoryCount += directories.Length;
+            var tasks = new List<Task<DirectoryData>>(directories.Length);
+            foreach (var directory in directories)
+                tasks.Add(Task.Run(() => new DirectoryNode(directory.Name, directory.FullName).CalculateDirectorySizeAsync()));
 
             await Task.WhenAll(tasks);
             foreach (var task in tasks)
-                size += task.Result;
-
-            return size;
+            {
+                directoryData.Size += task.Result.Size;
+                directoryData.FileCount += task.Result.FileCount;
+                directoryData.DirectoryCount += task.Result.DirectoryCount;
+            }
+                
+            // convert to MB
+            DirectoryData = directoryData;
+            return directoryData;
         }
         #endregion
 
@@ -92,7 +118,8 @@ namespace selective_archive_compressor.model
         bool m_IsSelected = false;
         bool m_IsExpanded = false;
         bool m_IsSelectedForCompression = false;
-        long m_Size = 0;
+        DirectoryData? m_DirectoryData; // null if not calculated
+        string m_FullPath = string.Empty;
         ObservableCollection<DirectoryNode> m_Children = new();
         #endregion
     }

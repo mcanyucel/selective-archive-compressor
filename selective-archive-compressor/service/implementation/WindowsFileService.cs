@@ -53,7 +53,7 @@ namespace selective_archive_compressor.service.implementation
         public async Task<DirectoryNode> CreateDirectoryTreeAsync(string rootDirectoryPath)
         {
             DirectoryInfo directoryInfo = new(rootDirectoryPath);
-            DirectoryNode node = new(directoryInfo.Name);
+            DirectoryNode node = new(directoryInfo.Name, rootDirectoryPath);
 
             List<Task<DirectoryNode>> tasks = new();
 

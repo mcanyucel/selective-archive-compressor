@@ -85,25 +85,7 @@ namespace selective_archive_compressor.viewmodel
         public DirectoryNode? SelectedNode
         {
             get => m_SelectedNode;
-            private set => SetProperty(ref m_SelectedNode, value);
-        }
-
-        public long SelectedNodeFileCount
-        {
-            get => m_SelectedNodeFileCount;
-            private set => SetProperty(ref m_SelectedNodeFileCount, value);
-        }
-
-        public long SelectedNodeDirectoryCount
-        {
-            get => m_SelectedNodeDirectoryCount;
-            private set => SetProperty(ref m_SelectedNodeDirectoryCount, value);
-        }
-
-        public long SelectedNodeTotalSize
-        {
-            get => m_SelectedNodeTotalSize;
-            private set => SetProperty(ref m_SelectedNodeTotalSize, value);
+            private set { SetProperty(ref m_SelectedNode, value); NotifyCommands(); }
         }
 
         public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
@@ -111,6 +93,7 @@ namespace selective_archive_compressor.viewmodel
 
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
         public IAsyncRelayCommand ScanCommand => m_ScanCommand;
+        public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
         public IRelayCommand<DirectoryNode> ToggleCompressionCommand => m_ToggleCompressionCommand;
         public IRelayCommand<DirectoryNode> SelectItemCommand => m_SelectItemCommand;
 
@@ -135,9 +118,22 @@ namespace selective_archive_compressor.viewmodel
 
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
             m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
+            m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand };
+            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand };
+        }
+
+        private bool AnalyzeCanExecute()
+        {
+            return !m_IsAnalyzing && !m_IsCompressing && m_SelectedNode != null;
+        }
+
+        private async Task Analyze()
+        {
+            IsAnalyzing = true;
+            _ = await SelectedNode!.CalculateDirectorySizeAsync();
+            IsAnalyzing = false;
         }
 
         private void SelectItem(DirectoryNode? node)
@@ -218,9 +214,6 @@ namespace selective_archive_compressor.viewmodel
         CompressionType m_CompressionType = CompressionType.SevenZip;
         int m_CompressionLevel = 9;
         DirectoryNode? m_SelectedNode;
-        long m_SelectedNodeFileCount;
-        long m_SelectedNodeDirectoryCount;
-        long m_SelectedNodeTotalSize;
 
         readonly IFileService m_FileService;
         readonly ILogService m_LogService;
