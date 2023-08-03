@@ -5,6 +5,7 @@ using selective_archive_compressor.service;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.viewmodel
@@ -81,12 +82,39 @@ namespace selective_archive_compressor.viewmodel
             private set => SetProperty(ref m_ProcessedItemCount, value);
         }
 
+        public DirectoryNode? SelectedNode
+        {
+            get => m_SelectedNode;
+            private set => SetProperty(ref m_SelectedNode, value);
+        }
+
+        public long SelectedNodeFileCount
+        {
+            get => m_SelectedNodeFileCount;
+            private set => SetProperty(ref m_SelectedNodeFileCount, value);
+        }
+
+        public long SelectedNodeDirectoryCount
+        {
+            get => m_SelectedNodeDirectoryCount;
+            private set => SetProperty(ref m_SelectedNodeDirectoryCount, value);
+        }
+
+        public long SelectedNodeTotalSize
+        {
+            get => m_SelectedNodeTotalSize;
+            private set => SetProperty(ref m_SelectedNodeTotalSize, value);
+        }
+
         public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
 
 
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
         public IAsyncRelayCommand ScanCommand => m_ScanCommand;
         public IRelayCommand<DirectoryNode> ToggleCompressionCommand => m_ToggleCompressionCommand;
+        public IRelayCommand<DirectoryNode> SelectItemCommand => m_SelectItemCommand;
+
+
 
 
 
@@ -103,12 +131,18 @@ namespace selective_archive_compressor.viewmodel
             m_DirectoryTree = new ObservableCollection<DirectoryNode>();
 
             m_ToggleCompressionCommand = new RelayCommand<DirectoryNode>(ToggleCompression);
+            m_SelectItemCommand = new RelayCommand<DirectoryNode>(SelectItem);
 
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
             m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
             m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand };
+        }
+
+        private void SelectItem(DirectoryNode? node)
+        {
+            SelectedNode = node;
         }
 
         private void ToggleCompression(DirectoryNode? node)
@@ -183,6 +217,10 @@ namespace selective_archive_compressor.viewmodel
         long m_TotalSize; // MB
         CompressionType m_CompressionType = CompressionType.SevenZip;
         int m_CompressionLevel = 9;
+        DirectoryNode? m_SelectedNode;
+        long m_SelectedNodeFileCount;
+        long m_SelectedNodeDirectoryCount;
+        long m_SelectedNodeTotalSize;
 
         readonly IFileService m_FileService;
         readonly ILogService m_LogService;
@@ -193,8 +231,10 @@ namespace selective_archive_compressor.viewmodel
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
         readonly IAsyncRelayCommand m_ScanCommand;
+        readonly IAsyncRelayCommand m_AnalyzeCommand;
 
         readonly IRelayCommand<DirectoryNode> m_ToggleCompressionCommand;
+        readonly IRelayCommand<DirectoryNode> m_SelectItemCommand;
 
         readonly List<IRelayCommand> m_RelayCommands;
         readonly List<IAsyncRelayCommand> m_AsyncRelayCommands;

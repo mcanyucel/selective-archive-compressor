@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.model
@@ -50,16 +51,6 @@ namespace selective_archive_compressor.model
         }
 
         #region Methods
-        public async Task<long> CalculateSize()
-        {
-            return await Task.Run(async () =>
-            {
-                Size = await CalculateFileSize();
-                foreach (var child in Children)
-                    Size += await child.CalculateSize();
-                return Size;
-            });
-        }
 
         public void MarkSelectedForCompression(bool isSelectedForCompression)
         {
@@ -74,11 +65,25 @@ namespace selective_archive_compressor.model
         /// Calculates the total size of the files in the directory. It does not include the subdirectories.
         /// </summary>
         /// <returns></returns>
-        static async Task<long> CalculateFileSize()
+        public async Task<long> CalculateDirectorySizeAsync()
         {
-            await Task.Delay(1000);
-            return 42;
+            long size = 0;
+            // current directory
+            DirectoryInfo directoryInfo = new(Name);
+            FileInfo[] files = directoryInfo.GetFiles();
+            foreach (var file in files)
+                size += file.Length;
+            //children
+            DirectoryInfo[] directories = directoryInfo.GetDirectories();
+            var tasks = new Task<long>[directories.Length];
+            for (int i = 0; i < directories.Length; i++)
+                tasks[i] = Task.Run(() => new DirectoryNode(directories[i].FullName).CalculateDirectorySizeAsync());
 
+            await Task.WhenAll(tasks);
+            foreach (var task in tasks)
+                size += task.Result;
+
+            return size;
         }
         #endregion
 
