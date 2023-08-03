@@ -2,8 +2,10 @@
 using CommunityToolkit.Mvvm.Input;
 using selective_archive_compressor.model;
 using selective_archive_compressor.service;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.viewmodel
@@ -36,24 +38,6 @@ namespace selective_archive_compressor.viewmodel
             set { SetProperty(ref m_OutputDirectoryPath, value); NotifyCommands(); }
         }
 
-        public long FileCount
-        {
-            get => m_FileCount;
-            private set => SetProperty(ref m_FileCount, value);
-        }
-
-        public long DirectoryCount
-        {
-            get => m_DirectoryCount;
-            private set => SetProperty(ref m_DirectoryCount, value);
-        }
-
-        public long TotalSize
-        {
-            get => m_TotalSize;
-            private set => SetProperty(ref m_TotalSize, value);
-        }
-
         public CompressionType CompressionType
         {
             get => m_CompressionType;
@@ -68,18 +52,6 @@ namespace selective_archive_compressor.viewmodel
 
         public ObservableCollection<FileItem> FileItems => m_FileItems;
 
-        public long TotalItemCount
-        {
-            get => m_TotalItemCount;
-            private set => SetProperty(ref m_TotalItemCount, value);
-        }
-
-        public long ProcessedItemCount
-        {
-            get => m_ProcessedItemCount;
-            private set => SetProperty(ref m_ProcessedItemCount, value);
-        }
-
         public DirectoryNode? SelectedNode
         {
             get => m_SelectedNode;
@@ -92,17 +64,15 @@ namespace selective_archive_compressor.viewmodel
             private set => SetProperty(ref m_StatusText, value);
         }
 
+        public static List<CompressionType> CompressionTypes => Enum.GetValues(typeof(CompressionType)).Cast<CompressionType>().ToList();
+        public static List<int> CompressionLevels => Enumerable.Range(0, 10).ToList();
         public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
-
-
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
+        public IAsyncRelayCommand BrowseOutputDirectoryCommand => m_BrowseOutputDirectoryCommand;
         public IAsyncRelayCommand ScanCommand => m_ScanCommand;
         public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
         public IRelayCommand<DirectoryNode> ToggleCompressionCommand => m_ToggleCompressionCommand;
         public IRelayCommand<DirectoryNode> SelectItemCommand => m_SelectItemCommand;
-
-
-
 
 
         #endregion
@@ -121,17 +91,23 @@ namespace selective_archive_compressor.viewmodel
             m_SelectItemCommand = new RelayCommand<DirectoryNode>(SelectItem);
 
             m_BrowseRootDirectoryCommand = new AsyncRelayCommand(BrowseRootDirectory, BrowseRootDirectoryCanExecute);
+            m_BrowseOutputDirectoryCommand = new AsyncRelayCommand(BrowseOutputDirectory, BrowseOutputDirectoryCanExecute);
             m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
             m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand };
+            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand, m_BrowseOutputDirectoryCommand };
         }
 
-        private bool AnalyzeCanExecute()
+        private bool BrowseOutputDirectoryCanExecute() => !m_IsAnalyzing && !m_IsCompressing;
+
+        private async Task BrowseOutputDirectory()
         {
-            return !m_IsAnalyzing && !m_IsCompressing && m_SelectedNode != null;
+            var result = await m_WindowService.ShowFolderPickerAsync(m_OutputDirectoryPath);
+            if (result != null) OutputDirectoryPath = $"{result}/archive";
         }
+
+        private bool AnalyzeCanExecute() => !m_IsAnalyzing && !m_IsCompressing && m_SelectedNode != null;
 
         private async Task Analyze()
         {
@@ -142,21 +118,11 @@ namespace selective_archive_compressor.viewmodel
             SetStatusText();
         }
 
-        private void SelectItem(DirectoryNode? node)
-        {
-            SelectedNode = node;
-        }
+        private void SelectItem(DirectoryNode? node) => SelectedNode = node;
 
-        private void ToggleCompression(DirectoryNode? node)
-        {
-            node?.MarkSelectedForCompression(!node.IsSelectedForCompression);
+        private void ToggleCompression(DirectoryNode? node) => node?.MarkSelectedForCompression(!node.IsSelectedForCompression);
 
-        }
-
-        private bool BrowseRootDirectoryCanExecute()
-        {
-            return !m_IsAnalyzing && !m_IsCompressing;
-        }
+        private bool BrowseRootDirectoryCanExecute() => !m_IsAnalyzing && !m_IsCompressing;
 
         private async Task BrowseRootDirectory()
         {
@@ -165,9 +131,7 @@ namespace selective_archive_compressor.viewmodel
         }
 
         private bool ScanCanExecute()
-        {
-            return !m_IsAnalyzing && !m_IsCompressing && !string.IsNullOrWhiteSpace(m_RootDirectoryPath);
-        }
+        => !m_IsAnalyzing && !m_IsCompressing && !string.IsNullOrWhiteSpace(m_RootDirectoryPath);
 
         private async Task Scan()
         {
@@ -178,19 +142,6 @@ namespace selective_archive_compressor.viewmodel
             IsAnalyzing = false;
             SetStatusText();
         }
-
-        private static void PrintDirectoryTree(DirectoryNode node, int level = 0)
-        {
-            string indent = new(' ', level * 2);
-            System.Diagnostics.Debug.WriteLine($"{indent}{node.Name}");
-            foreach (var child in node.Children)
-            {
-                PrintDirectoryTree(child, level + 1);
-            }
-        }
-
-
-
 
         void NotifyCommands()
         {
@@ -207,20 +158,11 @@ namespace selective_archive_compressor.viewmodel
 
         void SetStatusText(string? message = null) => StatusText = message ?? "Idle";
 
-
-
-
         #region Fields
-
         bool m_IsAnalyzing;
         bool m_IsCompressing;
         string m_RootDirectoryPath = string.Empty;
         string m_OutputDirectoryPath = string.Empty;
-        long m_FileCount;
-        long m_DirectoryCount;
-        long m_TotalItemCount;
-        long m_ProcessedItemCount;
-        long m_TotalSize; // MB
         CompressionType m_CompressionType = CompressionType.SevenZip;
         int m_CompressionLevel = 9;
         DirectoryNode? m_SelectedNode;
@@ -234,6 +176,7 @@ namespace selective_archive_compressor.viewmodel
         readonly ObservableCollection<DirectoryNode> m_DirectoryTree;
 
         readonly IAsyncRelayCommand m_BrowseRootDirectoryCommand;
+        readonly IAsyncRelayCommand m_BrowseOutputDirectoryCommand;
         readonly IAsyncRelayCommand m_ScanCommand;
         readonly IAsyncRelayCommand m_AnalyzeCommand;
 
@@ -242,7 +185,6 @@ namespace selective_archive_compressor.viewmodel
 
         readonly List<IRelayCommand> m_RelayCommands;
         readonly List<IAsyncRelayCommand> m_AsyncRelayCommands;
-
 
         #endregion
     }

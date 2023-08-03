@@ -46,7 +46,7 @@
                                     <i:InvokeCommandAction Command="{Binding DataContext.ToggleCompressionCommand, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" CommandParameter="{Binding}" />
                                 </i:EventTrigger>
                             </i:Interaction.Triggers>
-                            <iconPacks:PackIconMaterial DockPanel.Dock="Left" Kind="{Binding IsExpanded, Converter={StaticResource ExpandedToIconConverter}}" />
+                            <iconPacks:PackIconMaterial DockPanel.Dock="Left" Kind="{Binding IsExpanded, Converter={StaticResource ExpandedToIconConverter}}" Foreground="RoyalBlue" />
 
                             <iconPacks:PackIconMaterial DockPanel.Dock="Right" Margin="0,0,4,0" Kind="FolderZipOutline" Foreground="Red" Visibility="{Binding IsSelectedForCompression, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
@@ -98,6 +98,18 @@
                 <Button Margin="4" Content="Analyze selected folder" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
 
                 <Rectangle  HorizontalAlignment="Stretch"  VerticalAlignment="Center" Fill="RoyalBlue" Height="4" Margin="4"/>
+
+                <TextBlock Margin="4" Text="Compression Options" FontWeight="Bold" />
+                <TextBlock Margin="4" Text="Compression Type" />
+                <ComboBox Margin="4" ItemsSource="{Binding CompressionTypes}" SelectedItem="{Binding CompressionType}" />
+                <TextBlock Margin="4" Text="Compression Level" />
+                <ComboBox Margin="4" ItemsSource="{Binding CompressionLevels}" SelectedItem="{Binding CompressionLevel}" />
+                <TextBlock Margin="4" Text="Output Directory" />
+                <TextBox Margin="4" Text="{Binding OutputDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseOutputDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
+                    <mah:TextBoxHelper.ButtonContent>
+                        <iconPacks:PackIconMaterial Kind="Folder" />
+                    </mah:TextBoxHelper.ButtonContent>
+                </TextBox>
 
 
                 <ProgressBar Grid.Row="14"  Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />

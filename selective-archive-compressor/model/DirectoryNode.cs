@@ -83,32 +83,38 @@ namespace selective_archive_compressor.model
 
 
             DirectoryData directoryData = new();
-
-            // current directory
-            DirectoryInfo directoryInfo = new(FullPath);
-            FileInfo[] files = directoryInfo.GetFiles();
-            foreach (var file in files)
-                directoryData.Size += file.Length;
-
-            directoryData.FileCount += files.Length;
-
-            //children
-            DirectoryInfo[] directories = directoryInfo.GetDirectories();
-            directoryData.DirectoryCount += directories.Length;
-            var tasks = new List<Task<DirectoryData>>(directories.Length);
-            foreach (var directory in directories)
-                tasks.Add(Task.Run(() => new DirectoryNode(directory.Name, directory.FullName).CalculateDirectorySizeAsync()));
-
-            await Task.WhenAll(tasks);
-            foreach (var task in tasks)
+            try
             {
-                directoryData.Size += task.Result.Size;
-                directoryData.FileCount += task.Result.FileCount;
-                directoryData.DirectoryCount += task.Result.DirectoryCount;
+                // current directory
+                DirectoryInfo directoryInfo = new(FullPath);
+
+                FileInfo[] files = directoryInfo.GetFiles();
+                foreach (var file in files)
+                    directoryData.Size += file.Length;
+
+                directoryData.FileCount += files.Length;
+
+                //children
+                DirectoryInfo[] directories = directoryInfo.GetDirectories();
+                directoryData.DirectoryCount += directories.Length;
+                var tasks = new List<Task<DirectoryData>>(directories.Length);
+                foreach (var directory in directories)
+                    tasks.Add(Task.Run(() => new DirectoryNode(directory.Name, directory.FullName).CalculateDirectorySizeAsync()));
+
+                await Task.WhenAll(tasks);
+                foreach (var task in tasks)
+                {
+                    directoryData.Size += task.Result.Size;
+                    directoryData.FileCount += task.Result.FileCount;
+                    directoryData.DirectoryCount += task.Result.DirectoryCount;
+                }
+
+                DirectoryData = directoryData;
             }
-                
-            // convert to MB
-            DirectoryData = directoryData;
+            catch (UnauthorizedAccessException)
+            {
+                //skip
+            }
             return directoryData;
         }
         #endregion

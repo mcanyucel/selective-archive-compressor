@@ -21,7 +21,7 @@ namespace selective_archive_compressor.service.implementation
             ConcurrentDictionary<string, DirectoryInfo> directories = new();
             await TraverseDirectoriesAsync(rootDirectoryPath, directories);
 
-            foreach(var directory in directories)
+            foreach (var directory in directories)
             {
                 try
                 {
@@ -56,18 +56,24 @@ namespace selective_archive_compressor.service.implementation
             DirectoryNode node = new(directoryInfo.Name, rootDirectoryPath);
 
             List<Task<DirectoryNode>> tasks = new();
-
-            DirectoryInfo[] subDirectories = directoryInfo.GetDirectories();
-            foreach (var subDirectory in subDirectories)
+            try
             {
-                tasks.Add(Task.Run(() => CreateDirectoryTreeAsync(subDirectory.FullName)));
+                DirectoryInfo[] subDirectories = directoryInfo.GetDirectories();
+                foreach (var subDirectory in subDirectories)
+                {
+                    tasks.Add(Task.Run(() => CreateDirectoryTreeAsync(subDirectory.FullName)));
+                }
+
+                await Task.WhenAll(tasks);
+
+                foreach (var task in tasks)
+                {
+                    node.Children.Add(await task);
+                }
             }
-
-            await Task.WhenAll(tasks);
-
-            foreach (var task in tasks)
+            catch (UnauthorizedAccessException)
             {
-                node.Children.Add(await task);
+                //skip
             }
             return node;
         }
