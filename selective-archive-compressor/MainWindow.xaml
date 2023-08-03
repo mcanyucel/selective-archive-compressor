@@ -7,48 +7,103 @@
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:converters="clr-namespace:selective_archive_compressor.converter"
                  xmlns:viewmodel="clr-namespace:selective_archive_compressor.viewmodel"
+                 xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
                  d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
                  mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Selective Archive Compressor" Height="768" Width="1024">
     <Window.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:ExpandedToIconConverter x:Key="ExpandedToIconConverter" />
+        <converters:ByteToMegabyteConverter x:Key="ByteToMegabyteConverter" />
     </Window.Resources>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <!--10-->
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
+    <DockPanel LastChildFill="True">
 
-        <mah:ProgressRing Grid.Row="0" Grid.RowSpan="15" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Accent2}" IsActive="{Binding IsAnalyzing}" />
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusText}" />
+            </StatusBarItem>
+        </StatusBar>
 
-        <ProgressBar Grid.Row="14" Grid.Column="2" Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <UniformGrid DockPanel.Dock="Top" Columns="2" Rows="1">
+        <Grid Grid.Column="0">
+            <TreeView Margin="4" ItemsSource="{Binding DirectoryTree}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectedItemChanged">
+                        <i:InvokeCommandAction Command="{Binding DataContext.SelectItemCommand, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType={x:Type TreeView}}}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
 
-        <TextBlock Grid.Row="0" Grid.Column="1" Margin="4" Text="Root Folder" />
-        <TextBox Grid.Row="1" Grid.Column="1" Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
-            <mah:TextBoxHelper.ButtonContent>
-                <iconPacks:PackIconMaterial Kind="Folder" />
-            </mah:TextBoxHelper.ButtonContent>
-        </TextBox>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <DockPanel LastChildFill="True">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="MouseRightButtonDown">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.ToggleCompressionCommand, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" CommandParameter="{Binding}" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                            <iconPacks:PackIconMaterial DockPanel.Dock="Left" Kind="{Binding IsExpanded, Converter={StaticResource ExpandedToIconConverter}}" />
 
-        <Button Grid.Row="2" Grid.Column="1" Margin="4" Content="Analyze" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
+                            <iconPacks:PackIconMaterial DockPanel.Dock="Right" Margin="0,0,4,0" Kind="FolderZipOutline" Foreground="Red" Visibility="{Binding IsSelectedForCompression, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-    </Grid>
+                            <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" Margin="4,0,0,0" />
+                        </DockPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            <mah:ProgressRing VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Accent2}" IsActive="{Binding IsAnalyzing}" />
+        </Grid>
+            <StackPanel Grid.Column="1" Orientation="Vertical">
+                <TextBlock Margin="4" Text="Root Folder" FontWeight="Bold" />
+                <TextBox Margin="4" Text="{Binding RootDirectoryPath, Mode=TwoWay}" mah:TextBoxHelper.ButtonCommand="{Binding BrowseRootDirectoryCommand}" Style="{DynamicResource MahApps.Styles.TextBox.Button}">
+                    <mah:TextBoxHelper.ButtonContent>
+                        <iconPacks:PackIconMaterial Kind="Folder" />
+                    </mah:TextBoxHelper.ButtonContent>
+                </TextBox>
+                <Button Margin="4" Content="Scan" Command="{Binding ScanCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
+                <Rectangle  HorizontalAlignment="Stretch"  VerticalAlignment="Center" Fill="RoyalBlue" Height="4" Margin="4"/>
+                <TextBlock Margin="4" Text="Selected Folder Statistics" FontWeight="Bold" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="4" Text="Name" DockPanel.Dock="Left" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="4" Text="{Binding SelectedNode.Name}" DockPanel.Dock="Right" />
+
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" Text="Total File Count" DockPanel.Dock="Left" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="4" Text="{Binding SelectedNode.DirectoryData.FileCount}" DockPanel.Dock="Right" />
+
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="4" Text="Total Folder Count" DockPanel.Dock="Left" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Margin="4" Text="{Binding SelectedNode.DirectoryData.DirectoryCount}" DockPanel.Dock="Right" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Margin="4" Text="Total Size" DockPanel.Dock="Left" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" Margin="4" Text="{Binding SelectedNode.DirectoryData.Size, Converter={StaticResource ByteToMegabyteConverter}}" DockPanel.Dock="Right" />
+                </Grid>
+
+                <Button Margin="4" Content="Analyze selected folder" Command="{Binding AnalyzeCommand}" Style="{DynamicResource MahApps.Styles.Button.Square}" />
+
+                <Rectangle  HorizontalAlignment="Stretch"  VerticalAlignment="Center" Fill="RoyalBlue" Height="4" Margin="4"/>
+
+
+                <ProgressBar Grid.Row="14"  Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </StackPanel>
+        </UniformGrid>
+
+    </DockPanel>
+
 </mah:MetroWindow>

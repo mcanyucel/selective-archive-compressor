@@ -8,5 +8,7 @@ namespace selective_archive_compressor.service
     internal interface IFileService
     {
         Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath);
+
+        Task<DirectoryNode> CreateDirectoryTreeAsync(string rootDirectoryPath);
     }
 }

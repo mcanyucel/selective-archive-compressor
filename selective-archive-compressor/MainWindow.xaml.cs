@@ -9,7 +9,7 @@ namespace selective_archive_compressor
     {
         public MainWindow()
         {
-            this.DataContext = App.Current.ServiceProvider.GetService(typeof(MainViewModel));
+            DataContext = App.Current.ServiceProvider.GetService(typeof(MainViewModel));
             InitializeComponent();
         }
     }

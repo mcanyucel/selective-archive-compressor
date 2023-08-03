@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace selective_archive_compressor.converter
 {
-    internal class BooleanToVisibilityConverter : IValueConverter
+    internal class SelectionToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (bool)value ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+            if (value is bool selected)
+                return selected ? Colors.Red : Colors.Black;
+            return Colors.Black;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new InvalidOperationException("BooleanToVisibilityConverter can only be used OneWay.");
+            throw new InvalidOperationException();
         }
     }
 }
