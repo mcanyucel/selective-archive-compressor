@@ -78,7 +78,7 @@ namespace selective_archive_compressor.model
         /// <returns></returns>
         public async Task<DirectoryData> CalculateDirectorySizeAsync()
         {
-            if (DirectoryData?.Size > 0)
+            if (DirectoryData != null)
                 return DirectoryData;
 
 

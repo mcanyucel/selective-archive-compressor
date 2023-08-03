@@ -2,10 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using selective_archive_compressor.model;
 using selective_archive_compressor.service;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.viewmodel
@@ -88,6 +86,12 @@ namespace selective_archive_compressor.viewmodel
             private set { SetProperty(ref m_SelectedNode, value); NotifyCommands(); }
         }
 
+        public string StatusText
+        {
+            get => m_StatusText;
+            private set => SetProperty(ref m_StatusText, value);
+        }
+
         public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
 
 
@@ -131,9 +135,11 @@ namespace selective_archive_compressor.viewmodel
 
         private async Task Analyze()
         {
+            SetStatusText($"Analyzing {SelectedNode!.Name}...");
             IsAnalyzing = true;
             _ = await SelectedNode!.CalculateDirectorySizeAsync();
             IsAnalyzing = false;
+            SetStatusText();
         }
 
         private void SelectItem(DirectoryNode? node)
@@ -144,7 +150,7 @@ namespace selective_archive_compressor.viewmodel
         private void ToggleCompression(DirectoryNode? node)
         {
             node?.MarkSelectedForCompression(!node.IsSelectedForCompression);
-                
+
         }
 
         private bool BrowseRootDirectoryCanExecute()
@@ -165,11 +171,12 @@ namespace selective_archive_compressor.viewmodel
 
         private async Task Scan()
         {
+            SetStatusText("Scanning the directory tree...");
             IsAnalyzing = true;
             DirectoryTree.Clear();
             DirectoryTree.Add(await m_FileService.CreateDirectoryTreeAsync(m_RootDirectoryPath));
-
             IsAnalyzing = false;
+            SetStatusText();
         }
 
         private static void PrintDirectoryTree(DirectoryNode node, int level = 0)
@@ -198,6 +205,9 @@ namespace selective_archive_compressor.viewmodel
             }
         }
 
+        void SetStatusText(string? message = null) => StatusText = message ?? "Idle";
+
+
 
 
         #region Fields
@@ -214,6 +224,7 @@ namespace selective_archive_compressor.viewmodel
         CompressionType m_CompressionType = CompressionType.SevenZip;
         int m_CompressionLevel = 9;
         DirectoryNode? m_SelectedNode;
+        string m_StatusText = "Idle";
 
         readonly IFileService m_FileService;
         readonly ILogService m_LogService;
