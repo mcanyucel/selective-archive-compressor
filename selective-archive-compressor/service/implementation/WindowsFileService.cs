@@ -38,6 +38,7 @@ namespace selective_archive_compressor.service.implementation
                             await Task.Run(() => ZipFile.CreateFromDirectory(directoryNode.FullPath, outputFilePath, level, false));
                             break;
                         case CompressionType.SevenZip:
+                            SharpCompress.
                             SevenZip.CompressionLevel level7z = SevenZip.CompressionLevel.Ultra;
                             SevenZip.SevenZipCompressor compressor = new()
                             {
