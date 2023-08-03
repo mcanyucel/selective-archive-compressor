@@ -1,53 +1,68 @@
 ﻿using selective_archive_compressor.model;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 namespace selective_archive_compressor.service.implementation
 {
     internal class WindowsFileService : IFileService
     {
-        public async Task<IEnumerable<FileItem>> GetFilesAsync(string rootDirectoryPath)
+        public async Task<CompressionResult> CompressDirectoryTreeAsync(DirectoryNode directoryNode, string outputDirectoryPath, CompressionType compressionType, int compressionLevel)
         {
-            if (string.IsNullOrEmpty(rootDirectoryPath))
-                throw new ArgumentNullException(nameof(rootDirectoryPath));
+            CompressionResult result = new();
+            
 
-            if (!Directory.Exists(rootDirectoryPath))
-                throw new DirectoryNotFoundException(rootDirectoryPath);
-
-
-            ConcurrentDictionary<string, DirectoryInfo> directories = new();
-            await TraverseDirectoriesAsync(rootDirectoryPath, directories);
-
-            foreach (var directory in directories)
+            try
             {
-                try
+                Directory.CreateDirectory(outputDirectoryPath);
+
+                if (directoryNode.IsSelectedForCompression)
                 {
-                    System.Diagnostics.Debug.WriteLine($"{directory.Key} - {directory.Value.FullName}");
+                    string ext = compressionType switch
+                    {
+                        CompressionType.Zip => "zip",
+                        CompressionType.SevenZip => "7z",
+                        _ => throw new NotImplementedException()
+                    };
+
+                    string outputFilePath = Path.Combine(outputDirectoryPath, $"{directoryNode.Name}.{ext}");
+                    if (File.Exists(outputFilePath))
+                        File.Delete(outputFilePath);
+
+                    switch (compressionType)
+                    {
+                        case CompressionType.Zip:
+                            CompressionLevel level = CompressionLevel.SmallestSize;
+                            await Task.Run(() => ZipFile.CreateFromDirectory(directoryNode.FullPath, outputFilePath, level, false));
+                            break;
+                        case CompressionType.SevenZip:
+                            SevenZip.CompressionLevel level7z = SevenZip.CompressionLevel.Ultra;
+                            SevenZip.SevenZipCompressor compressor = new()
+                            {
+                                CompressionLevel = level7z,
+                                CompressionMethod = SevenZip.CompressionMethod.Lzma2,
+                                CompressionMode = SevenZip.CompressionMode.Create,
+                                ArchiveFormat = SevenZip.OutArchiveFormat.SevenZip
+                            };
+                            await compressor.CompressDirectoryAsync(directoryNode.FullPath, outputFilePath);
+                            break;
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    System.Diagnostics.Debug.WriteLine(ex.Message);
+
                 }
+                result.ResultStatus = true;
+            }
+            catch (Exception ex)
+            {
+                result.ResultStatus = false;
+                result.ErrorList = new List<string>() { ex.Message };
             }
 
-            return new List<FileItem>();
-        }
-
-        static async Task TraverseDirectoriesAsync(string folderPath, ConcurrentDictionary<string, DirectoryInfo> result)
-        {
-            DirectoryInfo dirInfo = new(folderPath);
-            result.TryAdd(dirInfo.FullName, dirInfo);
-
-            DirectoryInfo[] subDirectories = dirInfo.GetDirectories();
-            var tasks = new List<Task>();
-            foreach (var subDirectory in subDirectories)
-            {
-                tasks.Add(Task.Run(() => TraverseDirectoriesAsync(subDirectory.FullName, result)));
-            }
-            await Task.WhenAll(tasks);
+            return result;
         }
 
         public async Task<DirectoryNode> CreateDirectoryTreeAsync(string rootDirectoryPath)
@@ -65,7 +80,6 @@ namespace selective_archive_compressor.service.implementation
                 }
 
                 await Task.WhenAll(tasks);
-
                 foreach (var task in tasks)
                 {
                     node.Children.Add(await task);

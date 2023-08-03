@@ -111,6 +111,8 @@
                     </mah:TextBoxHelper.ButtonContent>
                 </TextBox>
 
+                <Button Margin="4" Content="Compress Marked" Command="{Binding CompressCommand}" Style="{DynamicResource MahApps.Styles.Button.Square.Accent}" />
+
 
                 <ProgressBar Grid.Row="14"  Foreground="{DynamicResource MahApps.Brushes.Accent2}" Maximum="{Binding TotalItemCount, Mode=OneWay}" Value="{Binding ProcessedItemCount, Mode=OneWay}" Visibility="{Binding IsCompressing, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </StackPanel>

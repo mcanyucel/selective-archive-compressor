@@ -46,8 +46,6 @@ namespace selective_archive_compressor.model
             private set => SetProperty(ref m_DirectoryData, value);
         }
 
-
-
         public ObservableCollection<DirectoryNode> Children
         {
             get => m_Children;
@@ -60,6 +58,8 @@ namespace selective_archive_compressor.model
             Name = name;
             FullPath = fullPath;
         }
+
+
 
         #region Methods
 

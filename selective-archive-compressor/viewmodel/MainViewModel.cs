@@ -69,10 +69,12 @@ namespace selective_archive_compressor.viewmodel
         public ObservableCollection<DirectoryNode> DirectoryTree => m_DirectoryTree;
         public IAsyncRelayCommand BrowseRootDirectoryCommand => m_BrowseRootDirectoryCommand;
         public IAsyncRelayCommand BrowseOutputDirectoryCommand => m_BrowseOutputDirectoryCommand;
+        public IAsyncRelayCommand CompressCommand => m_CompressCommand;
         public IAsyncRelayCommand ScanCommand => m_ScanCommand;
         public IAsyncRelayCommand AnalyzeCommand => m_AnalyzeCommand;
         public IRelayCommand<DirectoryNode> ToggleCompressionCommand => m_ToggleCompressionCommand;
         public IRelayCommand<DirectoryNode> SelectItemCommand => m_SelectItemCommand;
+        
 
 
         #endregion
@@ -94,9 +96,23 @@ namespace selective_archive_compressor.viewmodel
             m_BrowseOutputDirectoryCommand = new AsyncRelayCommand(BrowseOutputDirectory, BrowseOutputDirectoryCanExecute);
             m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
             m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
+            m_CompressCommand = new AsyncRelayCommand(Compress, CompressCanExecute);
 
             m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand, m_BrowseOutputDirectoryCommand };
+            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand, m_BrowseOutputDirectoryCommand, m_CompressCommand };
+        }
+
+        private bool CompressCanExecute() => !m_IsAnalyzing && !m_IsCompressing;
+
+        private async Task Compress()
+        {
+            IsCompressing = true;
+            SetStatusText("Compressing...");
+
+            await m_FileService.CompressDirectoryTreeAsync(DirectoryTree.First(), OutputDirectoryPath, CompressionType, CompressionLevel);
+
+            IsCompressing = false;
+            SetStatusText();
         }
 
         private bool BrowseOutputDirectoryCanExecute() => !m_IsAnalyzing && !m_IsCompressing;
@@ -179,6 +195,7 @@ namespace selective_archive_compressor.viewmodel
         readonly IAsyncRelayCommand m_BrowseOutputDirectoryCommand;
         readonly IAsyncRelayCommand m_ScanCommand;
         readonly IAsyncRelayCommand m_AnalyzeCommand;
+        readonly IAsyncRelayCommand m_CompressCommand;
 
         readonly IRelayCommand<DirectoryNode> m_ToggleCompressionCommand;
         readonly IRelayCommand<DirectoryNode> m_SelectItemCommand;
