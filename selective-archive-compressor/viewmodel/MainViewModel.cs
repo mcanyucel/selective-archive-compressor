@@ -115,7 +115,7 @@ namespace selective_archive_compressor.viewmodel
             m_LogService = logService;
             m_WindowService = windowService;
 
-            m_DirectoryTree = new ObservableCollection<DirectoryNode>();
+            m_DirectoryTree = [];
 
             m_ToggleCompressionCommand = new RelayCommand<DirectoryNode>(ToggleCompression);
             m_SelectItemCommand = new RelayCommand<DirectoryNode>(SelectItem);
@@ -124,8 +124,8 @@ namespace selective_archive_compressor.viewmodel
             m_ScanCommand = new AsyncRelayCommand(Scan, ScanCanExecute);
             m_AnalyzeCommand = new AsyncRelayCommand(Analyze, AnalyzeCanExecute);
 
-            m_RelayCommands = new List<IRelayCommand>();
-            m_AsyncRelayCommands = new List<IAsyncRelayCommand> { m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand };
+            m_RelayCommands = [];
+            m_AsyncRelayCommands = [m_BrowseRootDirectoryCommand, m_ScanCommand, m_AnalyzeCommand];
         }
 
         private bool AnalyzeCanExecute()

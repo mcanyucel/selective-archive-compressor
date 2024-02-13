@@ -1,6 +1,6 @@
 ﻿namespace selective_archive_compressor.model
 {
-    internal class DirectoryData
+    public class DirectoryData
     {
         public long Size { get; set; }
         public long FileCount { get; set; }
